@@ -23,7 +23,7 @@ if nargin < 2 || isempty(datasetpath)
   datasetpath = '~/Desktop/autoencoder';
 end
 if nargin < 1 || isempty(layersizes)
-  layersizes = [50 25]; %[2*3072 100];
+  layersizes = [50]; %[2*3072 100];
 end
 
 %% Load data
@@ -46,7 +46,7 @@ perm = randperm(size(traindata,2));
 traindata = traindata(:,perm);
 batchSize = 1000;
 maxIter = 20;
-for i=1:maxIter    
+for i=1:maxIter
     % Each iteration does a fresh batch looping when data runs out
     startIndex = mod((i-1) * batchSize, size(traindata,2)) + 1;
     fprintf('startIndex = %d, endIndex = %d\n', startIndex, startIndex + batchSize-1);
