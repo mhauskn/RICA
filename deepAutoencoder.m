@@ -48,10 +48,9 @@ cost = 1/M * 0.5 * sum(diff(:).^2);
 % cost = sum(diff(:).^2); % TODO: This is the cost func i used
 
 assert(l == 2)
-Wgrad = 2 * W{1} * (data * diff' + diff * data');
-
 grad = zeros(size(theta));
 for i=1:l-1
+    Wgrad{i} = 2 * W{i} * (data * diff' + diff * data');
     lold = lnew + 1;
     lnew = lnew + layersizes(i) * layersizes(i+1);
     grad(lold:lnew) = Wgrad{i}(:);
