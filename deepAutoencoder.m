@@ -14,6 +14,8 @@ function [cost,grad] = deepAutoencoder(theta, layersizes, data)
 % Note that this is not optimized for space, one can just retrieve W and b
 % on the fly during forward prop and backprop. But i do it here so that the
 % readers can understand what's going on
+
+% TODO: May need to add biases back in
 layersizes = [size(data,1) layersizes];
 l = length(layersizes);
 lnew = 0;
@@ -21,9 +23,6 @@ for i=1:l-1
     lold = lnew + 1;
     lnew = lnew + layersizes(i) * layersizes(i+1);
     W{i} = reshape(theta(lold:lnew), layersizes(i+1), layersizes(i));
-    lold = lnew + 1;
-    lnew = lnew + layersizes(i+1);
-    b{i} = theta(lold:lnew);
 end
 % handle tied-weight stuff
 j = 1;
@@ -31,84 +30,32 @@ for i=l:2*(l-1)
     lold = lnew + 1;
     lnew = lnew + layersizes(l-j);
     W{i} = W{l - j}';
-    b{i} = theta(lold:lnew);
-    j = j + 1;
 end
 assert(lnew == length(theta), 'Error: dimensions of theta and layersizes do not match\n')
 
-
 %% FORWARD PROP
-for i=1:2*(l-1)-1
+for i=1:2*(l-1)
     if i==1
-        [h{i} dh{i}] = tanhAct(bsxfun(@plus, W{i}*data, b{i}));
+        h{i} = W{i} * data;
     else
-        [h{i} dh{i}] = tanhAct(bsxfun(@plus, W{i}*h{i-1}, b{i}));
+        h{i} = W{i} * h{i-1};
     end
 end
-h{i+1} = linearAct(bsxfun(@plus, W{i+1}*h{i}, b{i+1}));
 
 %% COMPUTE COST
-diff = h{i+1} - data; 
+diff = h{i} - data; 
 M = size(data,2); 
-cost = 1/M * 0.5 * sum(diff(:).^2);
+cost = 1/M * 0.5 * sum(diff(:).^2); 
+% cost = sum(diff(:).^2); % TODO: This is the cost func i used
 
-%% BACKPROP
-if nargout > 1
-    outderv = 1/M * diff;    
-    for i=2*(l-1):-1:2
-        Wgrad{i} = outderv * h{i-1}';
-        bgrad{i} = sum(outderv,2);        
-        outderv = (W{i}' * outderv) .* dh{i-1};        
-    end
-    Wgrad{1} = outderv * data';
-    bgrad{1} = sum(outderv,2);
-        
-    % handle tied-weight stuff        
-    j = 1;
-    for i=l:2*(l-1)
-        Wgrad{l-j} = Wgrad{l-j} + Wgrad{i}';
-        j = j + 1;
-    end
-    % dump the results to the grad vector
-    grad = zeros(size(theta));
-    lnew = 0;
-    for i=1:l-1
-        lold = lnew + 1;
-        lnew = lnew + layersizes(i) * layersizes(i+1);
-        grad(lold:lnew) = Wgrad{i}(:);
-        lold = lnew + 1;
-        lnew = lnew + layersizes(i+1);
-        grad(lold:lnew) = bgrad{i}(:);
-    end
-    j = 1;
-    for i=l:2*(l-1)
-        lold = lnew + 1;
-        lnew = lnew + layersizes(l-j);
-        grad(lold:lnew) = bgrad{i}(:);
-        j = j + 1;
-    end
-end 
+assert(l == 2)
+Wgrad = 2 * W{1} * (data * diff' + diff * data');
+
+grad = zeros(size(theta));
+for i=1:l-1
+    lold = lnew + 1;
+    lnew = lnew + layersizes(i) * layersizes(i+1);
+    grad(lold:lnew) = Wgrad{i}(:);
 end
 
-%% USEFUL ACTIVATION FUNCTIONS
-function [a da] = sigmoidAct(x)
-
-a = 1 ./ (1 + exp(-x));
-if nargout > 1
-    da = a .* (1-a);
-end
-end
-
-function [a da] = tanhAct(x)
-a = tanh(x);
-if nargout > 1
-    da = (1-a) .* (1+a);
-end
-end
-
-function [a da] = linearAct(x)
-a = x;
-if nargout > 1
-    da = ones(size(a));
-end
 end
