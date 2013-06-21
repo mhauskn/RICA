@@ -57,5 +57,6 @@ for i=1:l-1
     lnew = lnew + layersizes(i) * layersizes(i+1);
     grad(lold:lnew) = Wgrad{i}(:);
 end
+grad
 assert(size(grad) == size(theta))
 end
