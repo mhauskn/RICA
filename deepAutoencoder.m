@@ -52,7 +52,7 @@ lnew = 0;
 grad = zeros(size(theta));
 for i=1:l-1
   %TODO: Check the format of W{i}. Wgrad probably needs to be reshaped
-    Wgrad{i} = 2 * W{i} * (data * diff' + diff * data');
+    Wgrad{i} = 2 * W{i} * (data * diff' + diff * data')
     lold = lnew + 1;
     lnew = lnew + layersizes(i) * layersizes(i+1);
     grad(lold:lnew) = Wgrad{i}(:);
