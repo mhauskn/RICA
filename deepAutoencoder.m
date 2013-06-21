@@ -27,9 +27,8 @@ end
 % handle tied-weight stuff
 j = 1;
 for i=l:2*(l-1)
-    lold = lnew + 1;
-    lnew = lnew + layersizes(l-j);
     W{i} = W{l - j}';
+    j++;
 end
 assert(lnew == length(theta), 'Error: dimensions of theta and layersizes do not match\n')
 
