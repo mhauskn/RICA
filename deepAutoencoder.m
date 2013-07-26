@@ -50,9 +50,9 @@ cost = 1/M * 0.5 * sum(diff(:).^2);
 assert(l == 2)
 lnew = 0;
 grad = zeros(size(theta));
+dd = data * diff';
 for i=1:l-1
-  %TODO: Check the format of W{i}. Wgrad probably needs to be reshaped
-    Wgrad{i} = 2 * W{i} * 1/M * (data * diff' + diff * data');
+    Wgrad{i} = 2 * W{i} * 1/M * (dd + dd'); % (data * diff' + diff * data')
     lold = lnew + 1;
     lnew = lnew + layersizes(i) * layersizes(i+1);
     grad(lold:lnew) = Wgrad{i}(:);
