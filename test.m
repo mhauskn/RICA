@@ -1,22 +1,6 @@
-function [cost, grad] = rica(W, layersizes, x)
-  h = W*x;
-  H = W'*h;
-  a = H - x;
-  cost = sum(a(:).^2);
-
-  grad = 2 * W * (x * a' + a * x');
-
-  % Compute a column of derivatives
-  # for col = 1 : size(grad)(2),
-  #   A = W * x(col);
-  #   B = (2 * (H - x));
-  #   C = 2 * (H(col) - x(col)) * (W * x);
-  #   grad(:,col) = A * B + C;
-  # end
-end
-
+function [] = main()
 %% [Input hidden]
-layersizes = [3 4];
+layersizes = [3 4]; 
 
 %% Weight initialization
 l = length(layersizes);
@@ -31,42 +15,64 @@ end
 theta = theta';
 
 W = reshape(theta, layersizes(2), layersizes(1));
-x = rand(layersizes(1),5);
+x = rand(layersizes(1),10);
 
 [cost, grad] = rica(W, layersizes, x)
-
-% [x, obj_value, convergence, iters] = bfgsmin(@rica, W, layersizes, x)
-
-% derv = 2*(H(1) - x(1))*(2*x(1)*W(1,1)+W(1,2)*x(2)) + 2*(H(2)-x(2))*(W(1,2)*x(1))
-
+    
 % Compute an emperical derivate of the function
 % This is equivalent to going column-wise through 
 % x and summing the derivatives
 empGrad = zeros(layersizes(2), layersizes(1));
-for row = 1 : size(grad)(1),
-  for col = 1 : size(grad)(2),
+for row = 1 : size(grad,1),
+  for col = 1 : size(grad,2),
     init = W(row,col);
 
     dx = 1e-10;
     W(row,col) = init + dx;
     h = W*x;
     H = W'*h;
-    a = H - x;
-    high = sum(a(:).^2);
+    M = size(x,2);
+    diff = H - x;
+    high = 1/M * 0.5 * sum(diff(:).^2);
+    s = arrayfun(@(x) log(cosh(x)), h); % Sparsity
+    sparsityCost = .5/M * sum(s(:));
+    high = high + sparsityCost;
 
     W(row,col) = init - dx;
     h = W*x;
     H = W'*h;
-    a = H - x;
-    low = sum(a(:).^2);
+    diff = H - x;
+    low = 1/M * 0.5 * sum(diff(:).^2);
+    s = arrayfun(@(x) log(cosh(x)), h); % Sparsity
+    sparsityCost = .5/M * sum(s(:));
+    low = low + sparsityCost;
 
     newDerv = (high - low) / (2 * dx);
     dx = dx / 2;
 
-    empGrad(row,col) += newDerv;
+    empGrad(row,col) = empGrad(row,col) + newDerv;
     W(row,col) = init;
   end
 end
 empGrad
 
 
+end
+
+function [cost, grad] = rica(W, layersizes, x)
+  h = W*x;
+  H = W'*h;
+  M = size(x,2);
+  diff = H - x;
+  cost = 1/M * 0.5 * sum(diff(:).^2);
+  
+  s = arrayfun(@(x) log(cosh(x)), h); % Sparsity
+  sparsityCost = .5/M * sum(s(:));
+  cost = cost + sparsityCost;
+
+  grad = 1/M * W * (x * diff' + diff * x');
+  
+  tmp = arrayfun(@(x) sinh(x)+1/cosh(x), h);
+  tmp2 = tmp * x';
+  grad = grad + 1/M + tmp2;
+end
