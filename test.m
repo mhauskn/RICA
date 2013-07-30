@@ -34,7 +34,7 @@ for row = 1 : size(grad,1),
     M = size(x,2);
     diff = H - x;
     high = 1/M * 0.5 * sum(diff(:).^2);
-    s = arrayfun(@(x) log(cosh(x)), h); % Sparsity
+    s = log(cosh(h));
     sparsityCost = .5/M * sum(s(:));
     high = high + sparsityCost;
 
@@ -43,7 +43,7 @@ for row = 1 : size(grad,1),
     H = W'*h;
     diff = H - x;
     low = 1/M * 0.5 * sum(diff(:).^2);
-    s = arrayfun(@(x) log(cosh(x)), h); % Sparsity
+    s = log(cosh(h));
     sparsityCost = .5/M * sum(s(:));
     low = low + sparsityCost;
 
@@ -55,8 +55,7 @@ for row = 1 : size(grad,1),
   end
 end
 empGrad
-
-
+grad ./ empGrad
 end
 
 function [cost, grad] = rica(W, layersizes, x)
@@ -66,13 +65,14 @@ function [cost, grad] = rica(W, layersizes, x)
   diff = H - x;
   cost = 1/M * 0.5 * sum(diff(:).^2);
   
-  s = arrayfun(@(x) log(cosh(x)), h); % Sparsity
+  s = log(cosh(h))
   sparsityCost = .5/M * sum(s(:));
   cost = cost + sparsityCost;
 
   grad = 1/M * W * (x * diff' + diff * x');
   
-  tmp = arrayfun(@(x) sinh(x)+1/cosh(x), h);
-  tmp2 = tmp * x';
-  grad = grad + 1/M + tmp2;
+  tmp = tanh(h) * x';
+  grad = grad + tmp;
 end
+
+main()
