@@ -44,21 +44,16 @@ end
 %% COMPUTE COST
 diff = h{i} - data; 
 M = size(data,2);
-lambda = .1;
-s = arrayfun(@(x) log(cosh(x)), h{1}); % Sparsity
-cost = 1/M * 0.5 * sum(diff(:).^2) + lambda/M * sum(s(:));
-% cost = sum(diff(:).^2); % TODO: This is the cost func i used
+lambda = .1; % Lambda trades off between sparsity and reconstruction
+s = log(cosh(h{1}));
+cost = 1/M * (sum(diff(:).^2) + lambda * sum(s(:)));
 
 assert(l == 2)
 lnew = 0;
 grad = zeros(size(theta));
 dd = data * diff';
-
-tmp = arrayfun(@(x) sinh(x)+1/cosh(x), h{1});
-tmp2 = tmp * data';
-max(tmp2(:))
 for i=1:l-1
-    Wgrad{i} = 2 * W{i} * 1/M * (dd + dd') + 1/M * tmp2; % (data * diff' + diff * data')
+    Wgrad{i} = 1/M * (2 * W{i} * (dd + dd') + lambda * tanh(h{1}) * data');
     lold = lnew + 1;
     lnew = lnew + layersizes(i) * layersizes(i+1);
     grad(lold:lnew) = Wgrad{i}(:);
