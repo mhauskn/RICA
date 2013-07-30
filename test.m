@@ -49,13 +49,12 @@ for row = 1 : size(grad,1),
 
     newDerv = (high - low) / (2 * dx);
     dx = dx / 2;
-
+    
     empGrad(row,col) = empGrad(row,col) + newDerv;
     W(row,col) = init;
   end
 end
 empGrad
-grad ./ empGrad
 end
 
 function [cost, grad] = rica(W, layersizes, x)
@@ -65,13 +64,13 @@ function [cost, grad] = rica(W, layersizes, x)
   diff = H - x;
   cost = 1/M * 0.5 * sum(diff(:).^2);
   
-  s = log(cosh(h))
+  s = log(cosh(h));
   sparsityCost = .5/M * sum(s(:));
-  cost = cost + sparsityCost;
+  cost = sparsityCost;
 
   grad = 1/M * W * (x * diff' + diff * x');
   
-  tmp = tanh(h) * x';
+  tmp = .5/M * tanh(h) * x';
   grad = grad + tmp;
 end
 
