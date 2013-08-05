@@ -23,7 +23,7 @@ if nargin < 2 || isempty(datasetpath)
   datasetpath = '~/Desktop';
 end
 if nargin < 1 || isempty(layersizes)
-  layersizes = [100]; %[2*3072 100];
+  layersizes = [10]; %[2*3072 100];
 end
 
 %% Load data
@@ -67,6 +67,7 @@ end
 
 %% Visualize the weights
 visualizeWeights(theta, layersizes, traindata)
+visualizeMaximallyResponsiveInputs(theta, layersizes, traindata)
 
 %% write to text files so that we can test your program
 writeToTextFiles;
