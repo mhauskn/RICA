@@ -1,4 +1,7 @@
-load([datasetpath,'/', 'smaller_dataset.mat'])
+function [traindata] = loadData(datasetpath)
+  %load([datasetpath,'/', 'smaller_dataset.mat'])
+  traindata = loadMNISTImages([datasetpath,'/','train-images-idx3-ubyte']);
+end
 
 
 % Helper function taken from http://ufldl.stanford.edu/wiki/index.php/Using_the_MNIST_Dataset
@@ -35,3 +38,4 @@ function labels = loadMNISTLabels(filename)
   assert(size(labels,1) == numLabels, 'Mismatch in label count');
   fclose(fp);
 end
+

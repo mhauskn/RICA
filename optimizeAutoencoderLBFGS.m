@@ -16,18 +16,18 @@ function [] = optimizeAutoencoderLBFGS(layersizes, datasetpath, ...
 % 
 %% Handle default parameters
 if nargin < 3 || isempty(finalObjective)
-    finalObjective = 50; % i am just making this up, the evaluation objective 
+    finalObjective = 5; % i am just making this up, the evaluation objective 
                          % will be much lower
 end
 if nargin < 2 || isempty(datasetpath)
-  datasetpath = '~/Desktop/autoencoder';
+  datasetpath = '~/Desktop';
 end
 if nargin < 1 || isempty(layersizes)
-  layersizes = [50]; %[2*3072 100];
+  layersizes = [100]; %[2*3072 100];
 end
 
 %% Load data
-loadData
+traindata = loadData(datasetpath);
 
 %% Random initialization
 initializeWeights;
@@ -64,6 +64,9 @@ for i=1:maxIter
         end
     end
 end
+
+%% Visualize the weights
+visualizeWeights(theta, layersizes, traindata)
 
 %% write to text files so that we can test your program
 writeToTextFiles;
