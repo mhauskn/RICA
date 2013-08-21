@@ -4,8 +4,6 @@
 % AISTATS 2010.
 % QVL: this initialization method appears to perform better than 
 % theta = randn(d,1);
-s0 = size(traindata,1);
-layersizes = [s0 layersizes];
 l = length(layersizes);
 lnew = 0;
 for i=1:l-1
@@ -16,4 +14,3 @@ for i=1:l-1
     theta(lold:lnew) = A(:);
 end
 theta = theta';
-layersizes = layersizes(2:end);

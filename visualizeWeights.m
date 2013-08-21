@@ -1,21 +1,28 @@
 function [] = visualizeWeights(theta, layersizes, data)
-%VISUALIZEWEIGHTS This function shows the weights for each hidden neuron
-layersizes = [size(data,1) layersizes];
+%% VISUALIZEWEIGHTS This function shows the weights for each hidden neuron
 l = length(layersizes);
 lnew = 0;
+transform = eye(layersizes(1));
 for i=1:l-1
     lold = lnew + 1;
     lnew = lnew + layersizes(i) * layersizes(i+1);
-    W{i} = reshape(theta(lold:lnew), layersizes(i+1), layersizes(i));
+    W = reshape(theta(lold:lnew), layersizes(i+1), layersizes(i));
+    
+    % Transform the weights back into the input space
+    transform = W * transform;
+    
+    % Normalize the weights to [0,1]
+    maxN = max(transform(:));
+    minN = min(transform(:));
+    normalized = 1-(transform - minN)./(maxN-minN);
+    
+    toShow = zeros(28, 28*layersizes(i+1));
+    for j=0:layersizes(i+1)-1
+        toShow(:, j*28+1:j*28+28) = reshape(normalized(j+1,:), 28, 28);
+    end
+    filename = strcat('images/layer', num2str(i), 'optimal.png');
+    imwrite(toShow,filename)
 end
-maxN = max(W{i}(:));
-minN = min(W{i}(:));
-normalized = 1-(W{i} - minN)./(maxN-minN);
-toShow = zeros(28, 28*layersizes(2));
-for i=0:layersizes(2)-1
-    toShow(:, i*28+1:i*28+28) = reshape(normalized(i+1,:), 28, 28);
-end
-imwrite(toShow,'images/optimal.png')
 
 end
 

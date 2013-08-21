@@ -16,18 +16,20 @@ function [] = optimizeAutoencoderLBFGS(layersizes, datasetpath, ...
 % 
 %% Handle default parameters
 if nargin < 3 || isempty(finalObjective)
-    finalObjective = 5; % i am just making this up, the evaluation objective 
+    finalObjective = .5; % i am just making this up, the evaluation objective 
                          % will be much lower
 end
 if nargin < 2 || isempty(datasetpath)
   datasetpath = '~/Desktop';
 end
 if nargin < 1 || isempty(layersizes)
-  layersizes = [10]; %[2*3072 100];
+  layersizes = [500 100 50 10]; %[2*3072 100];
 end
 
 %% Load data
 traindata = loadData(datasetpath);
+
+layersizes = [size(traindata,1) layersizes];
 
 %% Random initialization
 initializeWeights;
@@ -46,28 +48,35 @@ perm = randperm(size(traindata,2));
 traindata = traindata(:,perm);
 batchSize = 1000;
 maxIter = 20;
-for i=1:maxIter
-    % Each iteration does a fresh batch looping when data runs out
-    startIndex = mod((i-1) * batchSize, size(traindata,2)) + 1;
-    fprintf('startIndex = %d, endIndex = %d\n', startIndex, startIndex + batchSize-1);
-    data = traindata(:, startIndex:startIndex + batchSize-1); 
-    [theta, obj] = minFunc( @deepAutoencoder, theta, options, layersizes, ...
-                            data);
-    if obj <= finalObjective % use the minibatch obj as a heuristic for stopping
-                             % because checking the entire dataset is very
-                             % expensive
-        % yes, we should check the objective for the entire training set        
-        trainError = deepAutoencoder(theta, layersizes, traindata);
-        if trainError <= finalObjective
-            % now your submission is qualified
-            break
-        end
+lnew = 0;
+for layer=1:length(layersizes)-1
+    fprintf('Training Layer %i\n',layer);
+    lold = lnew + 1;
+    lnew = lnew + layersizes(layer) * layersizes(layer+1);
+    for i=1:maxIter
+        % Each iteration does a fresh batch looping when data runs out
+        startIndex = mod((i-1) * batchSize, size(traindata,2)) + 1;
+        fprintf('startIndex = %d, endIndex = %d\n', startIndex, startIndex + batchSize-1);
+        data = traindata(:, startIndex:startIndex + batchSize-1); 
+        [theta(lold:lnew), obj] = minFunc( @deepAutoencoder, theta(lold:lnew), ...
+            options, layersizes, data, layer, theta);        
     end
 end
 
+% if obj <= finalObjective % use the minibatch obj as a heuristic for stopping
+%                          % because checking the entire dataset is very
+%                          % expensive
+%     % yes, we should check the objective for the entire training set        
+%     trainError = deepAutoencoder(theta, layersizes, traindata, layer);
+%     if trainError <= finalObjective
+%         % now your submission is qualified
+%         break
+%     end
+% end
+
 %% Visualize the weights
 visualizeWeights(theta, layersizes, traindata)
-visualizeMaximallyResponsiveInputs(theta, layersizes, traindata)
+%visualizeMaximallyResponsiveInputs(theta, layersizes, traindata)
 
 %% write to text files so that we can test your program
-writeToTextFiles;
+%writeToTextFiles;
