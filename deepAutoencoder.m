@@ -1,4 +1,4 @@
-function [cost,grad] = deepAutoencoder(layerWeights, layersizes, data, top, theta)
+function [cost,grad] = deepAutoencoder(theta, layersizes, data, top)
 % cost and gradient of a deep autoencoder 
 % layersizes is a vector of sizes of hidden layers, e.g., 
 % layersizes[2] is the size of layer 2
@@ -21,11 +21,7 @@ lnew = 0;
 for i=1:top
     lold = lnew + 1;
     lnew = lnew + layersizes(i) * layersizes(i+1);
-    if i == top
-        W{i} = reshape(layerWeights, layersizes(i+1), layersizes(i));
-    else
-        W{i} = reshape(theta(lold:lnew), layersizes(i+1), layersizes(i));
-    end
+    W{i} = reshape(theta(lold:lnew), layersizes(i+1), layersizes(i));
 end
 % handle tied-weight stuff
 j = 1;
@@ -59,12 +55,19 @@ lambda = .1; % Lambda trades off between sparsity and reconstruction
 s = log(cosh(h{top}));
 cost = 1/M * (sum(diff(:).^2) + lambda * sum(s(:)));
 
-grad = zeros(size(layerWeights));
+grad = zeros(size(theta));
 if top == 1
     Wgrad = 1/M * (2 * W{top} * (dd + dd') + lambda * tanh(h{top}) * data');
 else
     Wgrad = 1/M * (2 * W{top} * (dd + dd') + lambda * tanh(h{top}) * h{top-1}');    
 end
-grad = Wgrad(:);
+lnew = 0;
+for i=1:l-1
+    lold = lnew + 1;
+    lnew = lnew + layersizes(i) * layersizes(i+1);
+    if i == top
+        grad(lold:lnew) = Wgrad(:);
+    end
+end
 end
 

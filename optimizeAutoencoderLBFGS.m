@@ -23,7 +23,7 @@ if nargin < 2 || isempty(datasetpath)
   datasetpath = '~/Desktop';
 end
 if nargin < 1 || isempty(layersizes)
-  layersizes = [500 100 50 10]; %[2*3072 100];
+  layersizes = [100 20 10]; %[2*3072 100];
 end
 
 %% Load data
@@ -47,7 +47,7 @@ options.TolX = 1e-3;
 perm = randperm(size(traindata,2));
 traindata = traindata(:,perm);
 batchSize = 1000;
-maxIter = 20;
+maxIter = 2;
 lnew = 0;
 for layer=1:length(layersizes)-1
     fprintf('Training Layer %i\n',layer);
@@ -58,8 +58,8 @@ for layer=1:length(layersizes)-1
         startIndex = mod((i-1) * batchSize, size(traindata,2)) + 1;
         fprintf('startIndex = %d, endIndex = %d\n', startIndex, startIndex + batchSize-1);
         data = traindata(:, startIndex:startIndex + batchSize-1); 
-        [theta(lold:lnew), obj] = minFunc( @deepAutoencoder, theta(lold:lnew), ...
-            options, layersizes, data, layer, theta);        
+        [theta, obj] = minFunc( @deepAutoencoder, theta, ...
+            options, layersizes, data, layer);        
     end
 end
 
