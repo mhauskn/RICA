@@ -25,7 +25,6 @@ theta = theta';
 % Found at http://www.di.ens.fr/~mschmidt/Software/minFunc.html
 addpath(genpath('~/Desktop/minFunc_2012/'));
 
-
 options.Method = 'lbfgs'; 
 options.maxIter = 20;	  
 options.display = 'on';
@@ -45,8 +44,9 @@ for layer=1:length(layersizes)-1
         % fastDerivativeCheck(@deepAutoencoder, theta, 1, 2, layersizes, layerinds, data, layer);
         % exit;
 
-        [theta, obj] = minFunc(@deepAutoencoder, theta, ...
-            options, layersizes, layerinds, data, layer);        
+        [theta, obj] = minFunc(@deepAutoencoder, theta, options, ...
+                               layersizes, layerinds, data, layer);
+            
     end
 end
 
