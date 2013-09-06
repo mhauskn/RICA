@@ -22,8 +22,10 @@ for i=1:length(layersizes)-1
 end
 theta = theta';
 
-addpath ~/Desktop/minFunc_2012/minFunc
-addpath ~/Desktop/minFunc_2012/minFunc/compiled
+% Found at http://www.di.ens.fr/~mschmidt/Software/minFunc.html
+addpath(genpath('~/Desktop/minFunc_2012/'));
+
+
 options.Method = 'lbfgs'; 
 options.maxIter = 20;	  
 options.display = 'on';
@@ -38,7 +40,12 @@ for layer=1:length(layersizes)-1
         startIndex = mod((i-1) * batchSize, size(traindata,2)) + 1;
         fprintf('startIndex = %d, endIndex = %d\n', startIndex, startIndex + batchSize-1);
         data = traindata(:, startIndex:startIndex + batchSize-1);
-        [theta, obj] = minFunc( @deepAutoencoder, theta, ...
+
+        %% Optionally Check the Gradient
+        % fastDerivativeCheck(@deepAutoencoder, theta, 1, 2, layersizes, layerinds, data, layer);
+        % exit;
+
+        [theta, obj] = minFunc(@deepAutoencoder, theta, ...
             options, layersizes, layerinds, data, layer);        
     end
 end
