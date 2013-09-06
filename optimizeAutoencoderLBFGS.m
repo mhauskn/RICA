@@ -1,42 +1,26 @@
-function [] = optimizeAutoencoderLBFGS(layersizes, datasetpath, ...
-                                       finalObjective)
-% train a deep autoencoder with variable hidden sizes
-% layersizes : the sizes of the hidden layers. For istance, specifying layersizes =
-%     [200 100] will create a network looks like input -> 200 -> 100 -> 200
-%     -> output (same size as input). Notice the mirroring structure of the
-%     autoencoders. Default layersizes = [2*3072 100]
-% datasetpath: the path to the CIFAR dataset (where we find the *.mat
-%     files). see loadData.m
-% finalObjective: the final objective that you use to compare to
-%                 terminate your optimization. To qualify, the objective
-%                 function on the entire training set must be below this
-%                 value.
-%
-% Author: Quoc V. Le (quocle@stanford.edu)
-% 
-%% Handle default parameters
-if nargin < 3 || isempty(finalObjective)
-    finalObjective = .5; % i am just making this up, the evaluation objective 
-                         % will be much lower
+function [] = optimizeAutoencoderLBFGS()
+traindata = loadData('~/Desktop');
+perm = randperm(size(traindata,2));
+traindata = traindata(:,perm);
+
+layersizes = [size(traindata,1) 100 20 10];
+
+% Record the index that each layer starts at
+indx = 1
+for i=1:length(layersizes)-1
+    layerinds(i) = indx;
+    indx = indx + layersizes(i) * layersizes(i+1);
 end
-if nargin < 2 || isempty(datasetpath)
-  datasetpath = '~/Desktop';
+layerinds(length(layersizes)) = indx;
+
+% Weight Initialization
+% TODO: May need to add biases back in
+for i=1:length(layersizes)-1
+    r  = sqrt(6) / sqrt(layersizes(i+1)+layersizes(i));   
+    A = rand(layersizes(i+1), layersizes(i))*2*r - r; 
+    theta(layerinds(i):layerinds(i+1)-1) = A(:);
 end
-if nargin < 1 || isempty(layersizes)
-  layersizes = [100 20 10]; %[2*3072 100];
-end
-
-%% Load data
-traindata = loadData(datasetpath);
-
-layersizes = [size(traindata,1) layersizes];
-
-%% Random initialization
-initializeWeights;
-
-%% Optimization: minibatch L-BFGS
-% Q.V. Le, J. Ngiam, A. Coates, A. Lahiri, B. Prochnow, A.Y. Ng. 
-% On optimization methods for deep learning. ICML, 2011
+theta = theta';
 
 addpath ~/Desktop/minFunc/
 options.Method = 'lbfgs'; 
@@ -44,39 +28,19 @@ options.maxIter = 20;
 options.display = 'on';
 options.TolX = 1e-3;
 
-perm = randperm(size(traindata,2));
-traindata = traindata(:,perm);
 batchSize = 1000;
-maxIter = 2;
-lnew = 0;
+maxIter = 20;
 for layer=1:length(layersizes)-1
     fprintf('Training Layer %i\n',layer);
-    lold = lnew + 1;
-    lnew = lnew + layersizes(layer) * layersizes(layer+1);
     for i=1:maxIter
         % Each iteration does a fresh batch looping when data runs out
         startIndex = mod((i-1) * batchSize, size(traindata,2)) + 1;
         fprintf('startIndex = %d, endIndex = %d\n', startIndex, startIndex + batchSize-1);
-        data = traindata(:, startIndex:startIndex + batchSize-1); 
+        data = traindata(:, startIndex:startIndex + batchSize-1);
         [theta, obj] = minFunc( @deepAutoencoder, theta, ...
-            options, layersizes, data, layer);        
+            options, layersizes, layerinds, data, layer);        
     end
 end
 
-% if obj <= finalObjective % use the minibatch obj as a heuristic for stopping
-%                          % because checking the entire dataset is very
-%                          % expensive
-%     % yes, we should check the objective for the entire training set        
-%     trainError = deepAutoencoder(theta, layersizes, traindata, layer);
-%     if trainError <= finalObjective
-%         % now your submission is qualified
-%         break
-%     end
-% end
-
-%% Visualize the weights
 visualizeWeights(theta, layersizes, traindata)
-%visualizeMaximallyResponsiveInputs(theta, layersizes, traindata)
 
-%% write to text files so that we can test your program
-%writeToTextFiles;
