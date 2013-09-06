@@ -6,7 +6,7 @@ traindata = traindata(:,perm);
 layersizes = [size(traindata,1) 100 20 10];
 
 % Record the index that each layer starts at
-indx = 1
+indx = 1;
 for i=1:length(layersizes)-1
     layerinds(i) = indx;
     indx = indx + layersizes(i) * layersizes(i+1);
@@ -22,7 +22,8 @@ for i=1:length(layersizes)-1
 end
 theta = theta';
 
-addpath ~/Desktop/minFunc/
+addpath ~/Desktop/minFunc_2012/minFunc
+addpath ~/Desktop/minFunc_2012/minFunc/compiled
 options.Method = 'lbfgs'; 
 options.maxIter = 20;	  
 options.display = 'on';
