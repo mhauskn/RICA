@@ -1,16 +1,11 @@
 function [cost,grad] = deepAutoencoder(theta, layersizes, layerinds, data, top)
-for i=1:top
+% TODO: This could be eliminated for speed
+for i=1:length(layersizes)-1
     W{i} = reshape(theta(layerinds(i):layerinds(i+1)-1), layersizes(i+1), layersizes(i));
 end
-% handle tied-weight stuff
-j = 1;
-for i=top+1:2*top
-    W{i} = W{top + 1 - j}';
-    j = j + 1;
-end
 
-%% Forwards & Backwards Prop
-for i=1:2*top
+%% Forwards Prop
+for i=1:length(layersizes)-1
     if i==1
         h{i} = W{i} * data;
     else
@@ -19,33 +14,21 @@ for i=1:2*top
 end
 
 %% COMPUTE COST
-if top == 1
-    diff = h{i} - data;
-    M = size(data,2);
-    dd = data * diff';
-else
-    diff = h{i-(top-1)} - h{top-1};
-    M = size(h{top-1},2);
-    dd = h{top-1} * diff';
-end
+diff = h{i} - data;
+M = size(data,2);
 
-lambda = .1; % Lambda trades off between sparsity and reconstruction
+lambda = 0; % Lambda trades off between sparsity and reconstruction
 s = log(cosh(h{top}));
 cost = 1/M * (sum(diff(:).^2) + lambda * sum(s(:)));
 
+% TODO: Compute full grad at once or go layer by layer?
 grad = zeros(size(theta));
-if top == 1
-    Wgrad = 1/M * (2 * W{top} * (dd + dd') + lambda * tanh(h{top}) * data');
-else
-    Wgrad = 1/M * (2 * W{top} * (dd + dd') + lambda * tanh(h{top}) * h{top-1}');    
-end
-lnew = 0;
 for i=1:length(layersizes)-1
-    lold = lnew + 1;
-    lnew = lnew + layersizes(i) * layersizes(i+1);
-    if i == top
-        grad(lold:lnew) = Wgrad(:);
-    end
+  if i==1
+    grad(layerinds(i):layerinds(i+1)-1) = 1/M * (2 * W{i+1}' * diff * data');
+  else
+    grad(layerinds(i):layerinds(i+1)-1) = 1/M * (2 * diff * h{1}');
+  end
 end
-end
+
 

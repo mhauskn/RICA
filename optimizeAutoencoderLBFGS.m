@@ -3,7 +3,7 @@ traindata = loadData('~/Desktop');
 perm = randperm(size(traindata,2));
 traindata = traindata(:,perm);
 
-layersizes = [size(traindata,1) 100 20 10];
+layersizes = [size(traindata,1) 100 size(traindata,1)];
 
 % Record the index that each layer starts at
 indx = 1;
@@ -41,8 +41,8 @@ for layer=1:length(layersizes)-1
         data = traindata(:, startIndex:startIndex + batchSize-1);
 
         %% Optionally Check the Gradient
-        % fastDerivativeCheck(@deepAutoencoder, theta, 1, 2, layersizes, layerinds, data, layer);
-        % exit;
+        %fastDerivativeCheck(@deepAutoencoder, theta, 1, 2, layersizes, layerinds, data, layer);
+        %exit;
 
         [theta, obj] = minFunc(@deepAutoencoder, theta, options, ...
                                layersizes, layerinds, data, layer);
