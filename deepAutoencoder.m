@@ -33,6 +33,7 @@ lambda = .1; % Lambda trades off between sparsity and reconstruction
 s = log(cosh(h{top}));
 cost = 1/M * (sum(diff(:).^2) + lambda * sum(s(:)));
 
+%% TODO: The sparsity gradient is only correct for layer 1!!!
 grad = zeros(size(theta));
 if top == 1
     Wgrad = 1/M * (2 * W{top} * (dd + dd') + lambda * tanh(h{top}) * data');
